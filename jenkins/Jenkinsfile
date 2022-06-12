@@ -120,8 +120,14 @@ pipeline {
                 }
             }
             steps {
-                dir('pckg/$BUILD_NUMBER') {
-                        sh 'ls . -al'                    
+                dir('pckg/$BUILD_NUMBER') { 
+                    
+                        sh 'git config --global user.email "dominila.l@gmail.com"'
+                        sh 'git config --global user.name "ldidil"'
+                        withEnv(["TOKEN=${GH_TOKEN}"]) {
+                            sh 'git config remote.origin.url "https://${TOKEN}@github.com/werruse/nodejs.org.git"'
+                        }
+                        withEnv(["VER=${VERSION}"]){                
                         withEnv(["TOKEN=${NPMJS_TOKEN}"]) {
                             sh 'echo "//registry.npmjs.org/:_authToken=${TOKEN}" >> ~/.npmrc'
                         }
