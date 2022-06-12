@@ -1,0 +1,70 @@
+pipeline {
+    agent none
+
+    stages {
+        stage('Checkout on volumine') {
+            agent any
+            steps {
+                script{
+                    try{
+                        sh 'docker volume create vol-in'
+                        sh 'docker volume create vol-out'
+                        sh 'rm * -r'
+                        sh 'docker volume ls'
+
+                        sh 'docker run -d --rm --name temp -v vol-in:/vi alpine tail -f /dev/null'
+                        dir('scm_cp') {
+                            checkout scm
+                            sh 'rm .git .github -r'
+                            sh 'cat package.json'
+                            sh 'docker cp . temp:/vi/$BUILD_NUMBER'
+                            sh 'docker stop temp'
+                        }
+                    }
+                    catch (Exception e) {
+                        sh 'docker stop temp'
+                        echo 'Stopping temp container...'
+                        throw new Exception(e.toString())
+                    }
+                }
+            }
+
+        }
+
+        stage('Build') {
+            agent {
+                docker {
+                    image 'node'
+                    args '-v vol-in:/vi -v vol-out:/vo -v $WORKSPACE:/output'
+
+                }
+            }
+            steps {
+                sh 'ls /vi/$BUILD_NUMBER -al'
+                dir('BLD') {
+                    sh 'cp /vi/$BUILD_NUMBER/ . -r'
+                    sh 'npm install --save --legacy-peer-deps'
+                    sh 'npm run build'
+                    sh 'ls -al'
+                    sh 'cp . /output/pckg -r'
+                }
+            }
+        }
+
+        stage('Test') {
+            agent {
+                docker {
+                    image 'node'
+                    args '-v vol-in:/vi -v vol-out:/vo'
+
+                }
+            }
+            steps {
+
+                dir('BLD') {
+                    sh 'npm run test'
+                }
+            }
+        }
+    }
+}
