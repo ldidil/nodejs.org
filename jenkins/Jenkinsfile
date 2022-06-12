@@ -1,8 +1,8 @@
 pipeline {
     agent none
-  parameters {
-    booleanParam(name: 'executeTests', defaultValue: true, description: '')
-  }
+    parameters {
+       booleanParam(name: 'executeTests', defaultValue: true, description: '')
+    }
     stages {
         stage('Checkout on volumine') {
             agent any
@@ -111,7 +111,7 @@ pipeline {
                 }
 
             }
-        }
+        
 
         stage('Publish') {
             agent {
@@ -138,14 +138,6 @@ pipeline {
                 }
                 sh 'ls'
             }
-        }
-
-    }
-    post{
-        failure{
-                emailext subject: "Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' failed",
-                body: "FAIL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]':\n Check console output at ${env.BUILD_URL}",
-                to: 'ldidil@gmail.com'
         }
     }
 }
