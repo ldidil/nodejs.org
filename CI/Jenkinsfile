@@ -11,7 +11,7 @@ pipeline {
             steps {
                 echo "building.." 
                 sh 'ls'
-                sh 'WORKDIR /CI'
+                sh 'cd CI'
 				sh 'docker build . -f builder.dockerfile -t builder'
             }
         }
