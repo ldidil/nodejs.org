@@ -126,16 +126,9 @@ pipeline {
                         withEnv(["TOKEN=${NPMJS_TOKEN}"]) {
                             sh 'echo "//registry.npmjs.org/:_authToken=${TOKEN}" >> ~/.npmrc'
                         }
-                        sh 'git config --global user.email "dominila.l@gmail.com"'
-                        sh 'git config --global user.name "ldidil"'
-
-                            sh 'npm version ${VER}-build$BUILD_NUMBER'
-                            sh 'git tag -a "${VER}-build$BUILD_NUMBER" -m "${params.executeTests}-build$BUILD_NUMBER"'
-
+                        sh 'npm version ${VER}-build$BUILD_NUMBER'
                         sh 'npm publish'
-                        sh 'git push --tags'
                 }
-                sh 'ls'
             }
         }
     }
