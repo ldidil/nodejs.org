@@ -2,7 +2,7 @@ pipeline {
     agent any
    
 	parameters {
-		string(name: 'version', defaultValue: '', description: 'App version')
+		string(name: 'Version', defaultValue: '', description: 'App version')
 	}
 
     stages {
@@ -10,10 +10,10 @@ pipeline {
         stage("build") {
             steps {
                 echo "building.." 
-				   sh 'docker build . -f build.dockerfile -t builder'
+				   sh 'docker build . -f builder.dockerfile -t builder'
             }
         }
-        
+
         stage('test') {
             steps {
 			  sh 'docker build . -f test.dockerfile -t tester'
