@@ -1,6 +1,7 @@
 pipeline {
     agent none
     parameters {
+       string(name: 'Version', defaultValue: '', description: 'App version')
        booleanParam(name: 'executeTests', defaultValue: true, description: '')
     }
     stages {
@@ -17,7 +18,6 @@ pipeline {
                         sh 'docker run -d --rm --name tmp -v vol-in:/vi alpine tail -f /dev/null'
                         dir('scm_cp') {
                             checkout scm
-                            sh 'ls -al'
                             sh 'rm .git .github -r'
                             sh 'cat package.json'
                             sh 'docker cp . tmp:/vi/$BUILD_NUMBER'
@@ -47,7 +47,6 @@ pipeline {
                     sh 'cp /vi/$BUILD_NUMBER/ . -r'
                     sh 'npm install --save --legacy-peer-deps'
                     sh 'npm run build'
-                    sh 'ls -al'
                     sh 'cp . /output/pckg -r'
                 }
             }
@@ -130,10 +129,9 @@ pipeline {
                         sh 'git config --global user.email "dominila.l@gmail.com"'
                         sh 'git config --global user.name "ldidil"'
 
-                        withEnv(["VER=${VERSION}"]){
                             sh 'npm version ${VER}-build$BUILD_NUMBER'
-                            sh 'git tag -a "${VER}-build$BUILD_NUMBER" -m "${VER}-build$BUILD_NUMBER"'
-                        }
+                            sh 'git tag -a "${VER}-build$BUILD_NUMBER" -m "${params.executeTests}-build$BUILD_NUMBER"'
+
                         sh 'npm publish'
                         sh 'git push --tags'
                 }
