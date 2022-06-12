@@ -27,9 +27,9 @@ pipeline {
         stage('deploy') {
             steps {
                  dir('CI'){
-                  sh  'docker build . -f deploy.dockerfile -t deploy'
+                  sh 'docker build . -f deploy.dockerfile -t deploy'
+		          sh 'docker run  -d -p 3000:80 deploy '      
 		          sh 'docker stop $(docker ps -a -q)'
-		             sh 'docker run  -d -p 3000:80 deploy '      
                 }         
             }
         }
