@@ -18,8 +18,31 @@ pipeline {
 
         stage('test') {
             steps {
-			  sh 'docker build . -f test.dockerfile -t tester'
-			  sh' docker run tester'
+                dir('CI'){
+				 sh 'docker build . -f test.dockerfile -t tester'
+			     sh' docker run tester'
+                }
+            }
+        }
+        stage('deploy') {
+            steps {
+                 dir('CI'){
+                  sh  'docker build . -f deploy.dockerfile -t deploy'
+		          sh 'docker stop $(docker ps -a -q)'
+		             sh 'docker run  -d -p 3000:80 deploy '      
+                }         
+            }
+        }
+        stage('publish') {
+		environment{
+			version = "${params.version}"
+		}
+            steps {
+                 dir('CI'){
+	              sh 'docker build . -f publish.dockerfile -t publish'
+	              sh "docker run --volume /var/jenkins_home/workspace/volumes:/final publish mv nodejs.tar.xz /final"
+	              echo "NODEJS.ORG VERSION ${params.version} HAS BEEN PUBLISHED" 	
+                 }
             }
         }
    } 
