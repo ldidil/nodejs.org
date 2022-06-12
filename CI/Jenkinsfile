@@ -10,9 +10,9 @@ pipeline {
         stage("build") {
             steps {
                 echo "building.." 
-                sh 'ls'
-                sh 'cd CI'
+                dir('CI'){
 				sh 'docker build . -f builder.dockerfile -t builder'
+                }
             }
         }
 
