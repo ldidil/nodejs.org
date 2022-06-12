@@ -1,102 +1,24 @@
 pipeline {
-    agent none
+    agent any
+   
+	parameters {
+		string(name: 'version', defaultValue: '', description: 'App version')
+	}
 
     stages {
-        stage('Checkout on volumine') {
-            agent any
+  
+        stage("build") {
             steps {
-                script{
-                    try{
-                        sh 'docker volume create vol-in'
-                        sh 'docker volume create vol-out'
-                        sh 'rm * -r'
-                        sh 'docker volume ls'
-
-                        sh 'docker run -d --rm --name temp -v vol-in:/vi alpine tail -f /dev/null'
-                        dir('scm_cp') {
-                            checkout scm
-                            sh 'rm .git .github -r'
-                            sh 'cat package.json'
-                            sh 'docker cp . temp:/vi/$BUILD_NUMBER'
-                            sh 'docker stop temp'
-                        }
-                    }
-                    catch (Exception e) {
-                        sh 'docker stop temp'
-                        echo 'Stopping temp container...'
-                        throw new Exception(e.toString())
-                    }
-                }
-            }
-
-        }
-
-        stage('Build') {
-            agent {
-                docker {
-                    image 'node'
-                    args '-v vol-in:/vi -v vol-out:/vo -v $WORKSPACE:/output'
-
-                }
-            }
-            steps {
-                sh 'ls /vi/$BUILD_NUMBER -al'
-                dir('BLD') {
-                    sh 'cp /vi/$BUILD_NUMBER/ . -r'
-                    sh 'npm install --save --legacy-peer-deps'
-                    sh 'npm install eslint-plugin-n@latest --save-dev'
-                    sh 'npm run build'
-                    sh 'ls -al'
-                    sh 'cp . /output/pckg -r'
-                }
+                echo "building.." 
+				   sh 'docker build . -f build.dockerfile -t builder'
             }
         }
-
-        stage('Test') {
-            agent {
-                docker {
-                    image 'node'
-                    args '-v vol-in:/vi -v vol-out:/vo'
-
-                }
-            }
+        
+        stage('test') {
             steps {
-
-                dir('BLD') {
-                    sh 'npm run test'
-                }
+			  sh 'docker build . -f test.dockerfile -t tester'
+			  sh' docker run tester'
             }
         }
-        stage('Deploy') {
-            agent {
-                docker {
-                    image 'node'
-                    args '-v vol-in:/vi -v vol-out:/vo'
-
-                }
-            }
-            steps {
-
-                dir('BLD') {
-                    script {
-                        try {
-                            timeout(time: 1, unit: 'MINUTES') {
-                                sh 'npm start'
-                            }
-                        } catch (Exception e) {
-                            echo e.toString()
-                            if(e.toString()=="org.jenkinsci.plugins.workflow.steps.FlowInterruptedException")
-                            {
-                                echo 'Deployed successfully!'
-                            }else{
-                                throw new Exception(e.toString())
-                            }
-                        }
-                    }
-
-                }
-
-            }
-        }
-    }
+   } 
 }
