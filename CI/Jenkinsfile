@@ -44,6 +44,7 @@ pipeline {
                 dir('BLD') {
                     sh 'cp /vi/$BUILD_NUMBER/ . -r'
                     sh 'npm install --save --legacy-peer-deps'
+                    sh 'npm install eslint-plugin-n@latest --save-dev'
                     sh 'npm run build'
                     sh 'ls -al'
                     sh 'cp . /output/pckg -r'
@@ -64,6 +65,37 @@ pipeline {
                 dir('BLD') {
                     sh 'npm run test'
                 }
+            }
+        }
+        stage('Deploy') {
+            agent {
+                docker {
+                    image 'node'
+                    args '-v vol-in:/vi -v vol-out:/vo'
+
+                }
+            }
+            steps {
+
+                dir('BLD') {
+                    script {
+                        try {
+                            timeout(time: 1, unit: 'MINUTES') {
+                                sh 'npm start'
+                            }
+                        } catch (Exception e) {
+                            echo e.toString()
+                            if(e.toString()=="org.jenkinsci.plugins.workflow.steps.FlowInterruptedException")
+                            {
+                                echo 'Deployed successfully!'
+                            }else{
+                                throw new Exception(e.toString())
+                            }
+                        }
+                    }
+
+                }
+
             }
         }
     }
