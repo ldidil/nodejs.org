@@ -114,19 +114,13 @@ pipeline {
             when { branch "CI" }
             steps {
                 dir('pckg/$BUILD_NUMBER') {
-                        script{
-                            env.VERSION = sh( script: "npm view . version",returnStdout: true).trim()
-                            echo "VERSION: ${env.VERSION}"
-                        }
                         sh 'ls . -al'                    
                         withEnv(["TOKEN=${NPMJS_TOKEN}"]) {
                             sh 'echo "//registry.npmjs.org/:_authToken=${TOKEN}" >> ~/.npmrc'
                         }
                         sh 'git config --global user.email "dominila.l@gmail.com"'
                         sh 'git config --global user.name "ldidil"'
-                        withEnv(["TOKEN=${GH_TOKEN}"]) {
-                            sh 'git config remote.origin.url "https://${TOKEN}@github.com/ldidil/nodejs.org.git"'
-                        }
+
                         withEnv(["VER=${VERSION}"]){
                             sh 'npm version ${VER}-build$BUILD_NUMBER'
                             sh 'git tag -a "${VER}-build$BUILD_NUMBER" -m "${VER}-build$BUILD_NUMBER"'
