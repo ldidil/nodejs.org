@@ -67,7 +67,7 @@ pipeline {
                 }
             }
 
-            }
+            
             steps {
 
                 dir('BLD') {
@@ -111,6 +111,7 @@ pipeline {
                 }
 
             }
+        }
         
 
         stage('Publish') {
